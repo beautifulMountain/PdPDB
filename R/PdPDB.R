@@ -1,6 +1,5 @@
 #' Pattern Discovery in PDB Structures of Metalloproteins
 #'
-#'
 #' @author Luca Belmonte, Sheref S. Mansy
 #' @usage PdPDB(path, metal, n, perc, interactive, dropsReplicate)
 #' @keywords metalloproteins, PDB, coordinating patterns, metal, alignment, ligand alignment, motifs
