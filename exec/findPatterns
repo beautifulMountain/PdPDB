@@ -1,0 +1,133 @@
+#! /bin/sh
+
+# How to use: run in into a directory where PDB files are. 
+#
+# NAME
+# 	findPatterns
+# SYNOPSIS
+#	findPatterns [METAL] [N]
+# METAL is the PDB chemical ID for the target metal
+# N is the number of residues to check in +/- n position 
+#
+# example usage: find_patterns fe 1
+
+# OUTPUT 1: patterns.csv
+# OUTPUT 2: log file
+
+rm -f *.tmp *.csv *.log
+
+touch keys.tmp
+touch pseudo_patterns.tmp
+touch PdPDB.log
+touch patterns.csv
+touch patterns.tmp
+
+metal=${1%.*} # example CO or FE or FES
+end=${2%.*} # check residues in +-n position
+
+echo " "
+
+# Save job description in PdPDB log file
+echo "Ran on:" $(date) > PdPDB.log
+echo "Host: " $(hostname) >> PdPDB.log
+echo "Path: " $(pwd) >> PdPDB.log
+echo "Prosthetic Centre: " $metal >> PdPDB.log
+echo "+/- checked positions: " $end >> PdPDB.log
+echo " " >> PdPDB.log
+echo "PdPDB ran on PDB files " >> PdPDB.log
+echo " " >> PdPDB.log
+
+
+discarded=0
+
+for i in *.pdb; do 
+	
+	pid=${i}
+
+	# remove useless info; i.e. keep just coordinates and infos on link
+	grep -Ei '^atom|^hetatm' ${i%.*}.pdb > ${i%.*}.tmp
+	
+	ligands="$(grep -Ei '^link' ${i%.*}.pdb | grep -wi "$metal" | awk '{print substr($0,18,3), substr($0,22,1), substr($0,23,4), substr($0,48,3), substr($0,52,1), substr($0,53,4)}' | awk -v m=$metal '{IGNORECASE=1; if ($1==m) print $4,$5,$6,$2,$3; else if ($4==m) print $1,$2,$3,$5,$6}'| grep -v "^$" | awk '{if (NF >= 4 ) print $0}' | sort -k4,4 -k5,5n -k2,2 -k3,3n | uniq)"
+
+	# checks if there are suitable files
+	line_number=$(echo "$ligands" | wc -l)
+
+	if [ "$line_number" -gt 1 ]; then  
+
+	echo "------------------------------------------------------------ "
+	echo "$pid"
+	echo "------------------------------------------------------------ "
+	
+		for j in `seq 1 $end`; do
+			#calculate ids of residues/nucleotides before and after the ligated ones
+			previous="$(echo "$ligands" | grep -Ei '^A[[:space:]]|^C[[:space:]]|^I[[:space:]]|^G[[:space:]]|^U[[:space:]]|da[[:space:]]|dc[[:space:]]|dg[[:space:]]|dt[[:space:]]|di[[:space:]]|ala|cys|asp|glu|phe|gly|his|ile|lys|leu|met|asn|pro|gln|arg|ser|thr|val|trp|tyr|mse' | awk -v j=$j '{print $2, $3-j, $4, $5}')\n$previous"
+
+			next="$(echo "$ligands" | grep -Ei '^A[[:space:]]|^C[[:space:]]|^I[[:space:]]|^G[[:space:]]|^U[[:space:]]|da[[:space:]]|dc[[:space:]]|dg[[:space:]]|dt[[:space:]]|di[[:space:]]|ala|cys|asp|glu|phe|gly|his|ile|lys|leu|met|asn|pro|gln|arg|ser|thr|val|trp|tyr|mse' | awk -v j=$j '{print $2, $3+j, $4, $5}' | grep -v "^$" )\n$next"
+		done
+
+		# mixing together next and previous
+		echo "$previous\n$next" | grep -v "^$" | sort -k1,1 -k2,2n | uniq > keys.tmp
+
+		# now search for the keys within the PDB to get AA/NA
+		while read line; do
+			key="$(echo "$line" | awk '{if (length($2)>3) print $1 $2; else print $1, $2}' | sed 's/ / \\+/g')"
+			# search the keys, filter the results of the search and order them in compliance with 'keys.tmp'
+			pseudo_patterns="$(grep -wi "$key" ${i%.*}.tmp | grep -Ei '^atom|^hetatm' | awk '{print substr($0,18,3), substr($0,22,1), substr($0,23,4)}' | grep -Ei '^[[:space:]][[:space:]]A|^[[:space:]][[:space:]]C|^[[:space:]][[:space:]]I|^[[:space:]][[:space:]]G|^[[:space:]][[:space:]]U|da[[:space:]]|dc[[:space:]]|dg[[:space:]]|dt[[:space:]]|di[[:space:]]|ala|cys|asp|glu|phe|gly|his|ile|lys|leu|met|asn|pro|gln|arg|ser|thr|val|trp|tyr|mse' | sort -k2,2 -k3,3n | uniq)"
+			
+			# if pseudo_patterns is not empty
+			if [ -n "$pseudo_patterns" ]; then
+				echo "$pseudo_patterns" >> pseudo_patterns.tmp 
+			else
+				echo " " >> pseudo_patterns.tmp
+			fi	
+
+			unset pseudo_patterns
+
+		done < keys.tmp
+
+		echo "$pid" > patterns.tmp # copy the PDB id for the pattern file
+	
+		# check if pseudo patterns exists and eventually build patterns by adding next/prev
+		if (test -f pseudo_patterns.tmp); then			
+			paste pseudo_patterns.tmp keys.tmp | awk '{if ($3==$5 && $2==$4) print $0; else print "Warning! NOT supported!"} '| awk '{print $1,toupper($2),$3,toupper($6),$7}' | sort -k4,4 -k5,5n -k2,2 -k3,3n | uniq >> patterns.tmp
+		fi		
+
+		# format patterns with (ligands)
+		echo "$ligands" | awk '{print "("$1")", toupper($2), $3, toupper($4), $5}'  | sort -k4,4 -k5,5n -k2,2 -k3,3n | uniq | awk '{if (NF>4) print $0;}' >> patterns.tmp # insert ligands
+
+		grep -v "^$" patterns.tmp | sort -k1 | awk '!seen[$2,$3,$4,$5]++' | sort -k4,4 -k5,5n -k2,2 -k3,3n | uniq >> patterns.csv # print in the pattern file
+
+		rm *.tmp # pdb_temp, keys and pseudo_patterns
+		unset previous
+		unset next
+		unset patterns_tmp
+
+	else
+		echo "------------------------------------------------------------ "
+		echo $pid "has no suitable pattern(s) for" $metal "!"
+		echo "------------------------------------------------------------ "
+		echo $pid "has no suitable pattern(s) for" $metal "!" >> PdPDB.log
+		discarded=$((discarded+1))
+		rm *.tmp # pdb_temp
+	
+	fi # end if line_number
+
+done
+
+total="$(ls -l *.pdb | wc -l)"
+warningMessages="$(grep -wi warning patterns.csv | wc -l)"
+
+echo " "
+echo " " >> PdPDB.log
+echo "Files that have been discarded:"  $discarded
+echo "Files that have been discarded:"  $discarded >> PdPDB.log
+echo "Files that have warning messages (check patterns.csv):"  $warningMessages
+echo "Files that have warning messages (check patterns.csv):"  $warningMessages >> PdPDB.log
+echo "Files that have been analyzed:"  $total
+echo "Files that have been analyzed:"  $total >> PdPDB.log
+echo " "
+echo " " >> PdPDB.log
+echo "NOTE: In crash case you can now RECOVERY the job!!!"
+echo " "
+
+#EOF

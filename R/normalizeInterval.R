@@ -1,0 +1,1 @@
+normalizeInterval <- function(x, min, max){ 1-((max-x)/(max-min)) }

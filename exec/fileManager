@@ -1,0 +1,35 @@
+#! /bin/sh
+
+# How to use: fileManager 
+#
+# NAME
+# 	fileManager
+# SYNOPSIS
+#	fileManager
+
+# OUTPUT: backup directory with *.csv *.pdf and *.log files
+
+date=$(date +"%m_%d_%Y_%T")
+
+if (test -f patterns.csv); then 
+
+
+	mkdir "$date"; 
+	mv *.csv "$date" 2>/dev/null || : ; cp PdPDB.log "$date" 2>/dev/null || : ; mv *.svg "$date" 2>/dev/null || :
+	cp "$date"/patterns.csv .	
+
+	rm -f *.tmp
+
+	echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ "
+	echo "PdPDB backuped a job..." 
+	echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ "
+
+	grep -Eiwv 'alignment|exited' PdPDB.log > PdPDB.tmp
+	rm PdPDB.log
+	mv PdPDB.tmp PdPDB.log
+
+
+fi
+
+
+# EOF
