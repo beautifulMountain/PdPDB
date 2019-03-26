@@ -17,7 +17,7 @@ PdPDB(path, metal, n, perc, interactive, dropsReplicate)
 
 \item{interactive}{A numerical value. 0 interactive, 1 automated (will not cut dendrogram), 2 user decided cut. In mode 1 and 2 ExPASy amino acid frequencies are used as reference.}
 
-\item{dropsReplicate}{A numerical value. 0 keeps replicated patterns, 1 drops replicated patterns entry by entry, 2 keeps only unique patterns.}
+\item{dropsReplicate}{A numerical value. 0 keeps replicated patterns, 1 drops replicated patterns entry by entry, 2 keeps only unique patterns. WARNING: If you are going to use PdPDB-3D, the use of option 0 is mandatory!}
 }
 \value{
 PdPDB generates a list of ".csv" and ".svg" files that will be stored in the same folder of the analyzed pdb/cif files (see "path"), its output is as follows:
@@ -42,6 +42,7 @@ PdPDB generates a list of ".csv" and ".svg" files that will be stored in the sam
 \item{preceeding_X_standardized.svg}{Plot of the z-score per each amino acid in preceeding positions.}
 \item{root_standardized.svg}{Plot of the root z-score.}
 \item{patterns.csv}{PDB like extracted patterns along with the PDB ID and metal IDs. Useful for debbugging. Needed for restore.}
+\item{report.pdf}{A report file consisting of all the files but patterns.csv.}
 \item{PdPDB.log}{PdPDB log file. Useful for debbugging. Needed for restore.}
 }
 \description{
@@ -64,11 +65,11 @@ dropsReplicate=0 # do not remove replicated patterns
 ################ Launch PdPDB
 PdPDB(path_to_PDB,metal,n, perc, interactive, dropsReplicate)
 }
-\author{
-Luca Belmonte, Sheref S. Mansy
-}
 \references{
 Belmonte L, Mansy SS Patterns of Ligands Coordinated to Metallocofactors Extracted from the Protein Data Bank, Journal of Chemical Information and Modeling (accepted)
+}
+\author{
+Luca Belmonte, Sheref S. Mansy
 }
 \keyword{PDB,}
 \keyword{alignment,}
@@ -78,4 +79,3 @@ Belmonte L, Mansy SS Patterns of Ligands Coordinated to Metallocofactors Extract
 \keyword{metalloproteins,}
 \keyword{motifs}
 \keyword{patterns,}
-

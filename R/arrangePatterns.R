@@ -73,7 +73,7 @@ arrangePatterns <- function(blockRaw, n){
   pid<-as.data.frame(na.omit(pid))
   names(pid)<-"pid"
   
-  dfpatterns<-cbind(dfpatterns, pid) # hanno un numero diverso di righe! - ERRORE? - questo può dipendere da come si lancia il tool se conta la frequenza o meno del pattern. In tal caso deve essere possibile inserire il pdb id con fillNAsPIDlist
+  dfpatterns<-cbind(dfpatterns, pid)
   dfpatterns.new<-dfpatterns[apply(dfpatterns,1,function(x)any(!is.na(x))),] # delete null values
   
   dfpatterns.new
