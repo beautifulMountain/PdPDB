@@ -21,4 +21,6 @@ getPDBs <- function(PDBlist, path, ext = "pdb"){
                
   )
   
+  return(NA)
+  
 }
