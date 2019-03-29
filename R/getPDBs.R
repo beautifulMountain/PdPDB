@@ -1,4 +1,4 @@
-#' Pattern Discovery in PDB Structures of Metalloproteins
+#' Get a list of PDBs
 #'
 #' @author Luca Belmonte
 #' @usage getPDBs(PDBlist, path, ext = "pdb")
