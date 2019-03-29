@@ -9,10 +9,11 @@ Depends:
     tseries, 
     xtable,
     tools,
-    HelpersMG
+    HelpersMG,
+    Rpdb
 Type: Package
 Title: Pattern Discovery in PDB Structures of Metalloproteins
-Version: 2.0.3
+Version: 2.0.4
 Date: 2018-01-23
 Author: Luca Belmonte <luca.belmonte@unimore.it>
 Maintainer: Luca Belmonte <luca.belmonte@unimore.it>
